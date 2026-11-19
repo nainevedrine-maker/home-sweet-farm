@@ -91,7 +91,7 @@
   <button id="fs" type="button">Plein écran</button>
 </footer>
 
-<script>var HSF_VERSION = "20261119-2301";</script>
+<script>var HSF_VERSION = "20261120-0044";</script>
 <script>document.write('<script src="Build/Web.loader.js?v=' + HSF_VERSION + '"><\/script>');</script>
 <script>
   (function () {
@@ -111,6 +111,8 @@
 
     createUnityInstance(canvas, {
       arguments: [],
+      // Phones render at 3x pixels by default: capped so the game stays fluid (sharp enough on a phone screen).
+      devicePixelRatio: Math.min(window.devicePixelRatio || 1, /iPhone|iPad|Android/i.test(navigator.userAgent) ? 1.75 : 2),
       // Gzip files published under a .wasm name (a type the host serves); the loader unzips them itself.
       dataUrl: "Build/hsf-data.wasm?v=" + HSF_VERSION,
       frameworkUrl: "Build/hsf-framework.wasm?v=" + HSF_VERSION,
