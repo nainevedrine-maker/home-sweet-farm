@@ -69,7 +69,17 @@
   }
   button:hover { background: rgba(246, 236, 220, 0.18); }
   button:focus-visible { outline: 2px solid var(--tomato); outline-offset: 2px; }
+  /* Full screen (20/11): real fullscreen where the browser allows it (Android, computer); on iPhone, where pages
+     cannot go fullscreen, the game simply takes the whole screen (title and hint hidden) with a close button. */
+  body.fs header, body.fs footer { display: none; }
+  body.fs { padding: 0; gap: 0; overflow: hidden; }
+  body.fs .stage { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; max-width: none; aspect-ratio: auto; border-radius: 0; box-shadow: none; z-index: 20; }
+  #fs-exit { display: none; position: fixed; top: calc(env(safe-area-inset-top, 0px) + 8px); right: 10px; z-index: 30; width: 40px; height: 40px; padding: 0; border-radius: 50%; font-size: 18px; line-height: 40px; background: rgba(11, 30, 54, 0.55); color: #fff; border: 0; }
+  body.fs #fs-exit { display: block; }
 </style>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
 <header>
   <h1>Home Sweet <span>Farm</span></h1>
@@ -90,8 +100,9 @@
   <span>Clique et fais glisser pour déplacer Eden</span>
   <button id="fs" type="button">Plein écran</button>
 </footer>
+<button id="fs-exit" type="button" aria-label="Quitter le plein écran">✕</button>
 
-<script>var HSF_VERSION = "20261120-2127";</script>
+<script>var HSF_VERSION = "20261120-2141";</script>
 <script>document.write('<script src="Build/Web.loader.js?v=' + HSF_VERSION + '"><\/script>');</script>
 <script>
   (function () {
@@ -133,9 +144,25 @@
       canvas.focus();
     }).catch(function (e) { fail(e && e.message ? e.message : String(e)); });
 
-    document.getElementById("fs").addEventListener("click", function () {
-      try { if (instance) instance.SetFullscreen(1); } catch (e) {}
-    });
+    // Full screen: the real one where it exists (Android, computer), else the game takes the whole page (iPhone).
+    var stage = document.getElementById("stage");
+    function fit() { setTimeout(function () { window.dispatchEvent(new Event("resize")); }, 60); }
+    function enterFs() {
+      document.body.classList.add("fs");
+      var el = document.documentElement;
+      var req = el.requestFullscreen || el.webkitRequestFullscreen;
+      if (req) { try { var p = req.call(el); if (p && p.catch) p.catch(function () {}); } catch (e) {} }
+      fit();
+    }
+    function exitFs() {
+      document.body.classList.remove("fs");
+      var ex = document.exitFullscreen || document.webkitExitFullscreen;
+      if ((document.fullscreenElement || document.webkitFullscreenElement) && ex) { try { ex.call(document); } catch (e) {} }
+      fit();
+    }
+    document.getElementById("fs").addEventListener("click", enterFs);
+    document.getElementById("fs-exit").addEventListener("click", exitFs);
+    document.addEventListener("fullscreenchange", function () { if (!document.fullscreenElement) { document.body.classList.remove("fs"); fit(); } });
   })();
 </script>
 
