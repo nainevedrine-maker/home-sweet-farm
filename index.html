@@ -57,8 +57,18 @@
     background: #0b3f6e; text-align: center; padding: 24px;
   }
   .loading .crate { font-family: var(--display); font-size: 22px; }
-  .bar { width: 70%; height: 12px; border-radius: 6px; background: rgba(246, 236, 220, 0.12); overflow: hidden; }
-  .bar i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, var(--basil), var(--tomato)); transition: width 0.2s; }
+  /* 21/11: a little drawn scene (lake, hut, sun), a tomato riding the bar, and rotating tips while the game loads. */
+  .scene { width: 72%; max-width: 300px; }
+  .scene .sun { animation: sun 4s ease-in-out infinite alternate; transform-origin: 230px 40px; }
+  .scene .wave { animation: wave 3s ease-in-out infinite alternate; }
+  @keyframes sun { from { transform: scale(0.94); } to { transform: scale(1.06); } }
+  @keyframes wave { from { transform: translateX(-6px); } to { transform: translateX(6px); } }
+  .bar { position: relative; width: 70%; height: 12px; border-radius: 6px; background: rgba(246, 236, 220, 0.12); overflow: visible; }
+  .bar i { display: block; height: 100%; width: 0%; border-radius: 6px; background: linear-gradient(90deg, var(--basil), var(--tomato)); transition: width 0.2s; }
+  .bar b { position: absolute; top: 50%; left: 0%; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ff8a73, var(--tomato) 60%); box-shadow: 0 2px 6px rgba(0,0,0,0.35); transition: left 0.2s; }
+  .bar b::after { content: ""; position: absolute; top: -5px; left: 7px; width: 8px; height: 7px; border-radius: 50% 50% 0 0; background: var(--basil); }
+  .tip { min-height: 2.6em; max-width: 30ch; font-size: 14px; color: var(--cream); opacity: 0.9; transition: opacity 0.4s; }
+  @media (prefers-reduced-motion: reduce) { .scene .sun, .scene .wave { animation: none; } }
   .pct { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13px; }
   .error { color: #ffb4a6; font-size: 14px; max-width: 32ch; }
   footer { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: center; font-size: 13px; color: var(--muted); }
@@ -89,9 +99,20 @@
 <div class="stage" id="stage">
   <canvas id="unity-canvas" tabindex="-1"></canvas>
   <div class="loading" id="loading">
+    <svg class="scene" viewBox="0 0 300 170" aria-hidden="true">
+      <circle class="sun" cx="230" cy="40" r="22" fill="#ffd45a"/>
+      <path d="M0 110 Q150 80 300 110 L300 170 L0 170 Z" fill="#6bbf59"/>
+      <path class="wave" d="M-10 140 Q30 130 70 140 T150 140 T230 140 T310 140 L310 170 L-10 170 Z" fill="#3aa8e8"/>
+      <rect x="110" y="72" width="60" height="38" rx="3" fill="#9a6a43"/>
+      <path d="M102 76 L140 50 L178 76 Z" fill="#c9553f"/>
+      <rect x="133" y="88" width="14" height="22" rx="2" fill="#f2b45c"/>
+      <rect x="116" y="82" width="12" height="10" rx="1" fill="#bfe3ff"/>
+      <circle cx="70" cy="104" r="5" fill="#e8553f"/><circle cx="82" cy="106" r="5" fill="#e8553f"/><circle cx="210" cy="104" r="5" fill="#e8553f"/>
+    </svg>
     <div class="crate">La cabane se prépare…</div>
-    <div class="bar"><i id="bar"></i></div>
+    <div class="bar"><i id="bar"></i><b id="tomate"></b></div>
     <div class="pct" id="pct">0 %</div>
+    <div class="tip" id="tip">Astuce : récolte, vends au stand et répare la cabane pour faire renaître le lac.</div>
     <div class="error" id="error" hidden></div>
   </div>
 </div>
@@ -102,7 +123,7 @@
 </footer>
 <button id="fs-exit" type="button" aria-label="Quitter le plein écran">✕</button>
 
-<script>var HSF_VERSION = "20261121-1345";</script>
+<script>var HSF_VERSION = "20261121-1832";</script>
 <script>document.write('<script src="Build/Web.loader.js?v=' + HSF_VERSION + '"><\/script>');</script>
 <script>
   (function () {
@@ -111,7 +132,22 @@
     var pct = document.getElementById("pct");
     var loading = document.getElementById("loading");
     var error = document.getElementById("error");
+    var tomate = document.getElementById("tomate");
     var instance = null;
+    // Tips while the game loads (21/11).
+    var tips = [
+      "Astuce : récolte, vends au stand et répare la cabane pour faire renaître le lac.",
+      "Astuce : choisis ton compagnon : il ramène l'argent du stand pendant que tu travailles.",
+      "Astuce : un coffre t'attend chaque jour près de la cabane.",
+      "Astuce : les défis de rythme rapportent une belle prime si tu vas vite.",
+      "Astuce : le chariot d'Eden porte encore plus de produits d'un coup.",
+      "Astuce : le bouton appareil photo garde un souvenir de ta ferme."
+    ];
+    var tipEl = document.getElementById("tip"), tipI = 0;
+    var tipTimer = setInterval(function () {
+      tipEl.style.opacity = 0;
+      setTimeout(function () { tipI = (tipI + 1) % tips.length; tipEl.textContent = tips[tipI]; tipEl.style.opacity = 0.9; }, 400);
+    }, 3500);
 
     function fail(msg) {
       error.hidden = false;
@@ -137,9 +173,11 @@
     }, function (p) {
       var v = Math.round(p * 100);
       bar.style.width = v + "%";
+      tomate.style.left = v + "%";
       pct.textContent = v + " %";
     }).then(function (inst) {
       instance = inst;
+      clearInterval(tipTimer);
       loading.hidden = true;
       canvas.focus();
     }).catch(function (e) { fail(e && e.message ? e.message : String(e)); });
