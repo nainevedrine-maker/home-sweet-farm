@@ -6,6 +6,9 @@
 </head>
 <body style="margin:0">
 <title>Home Sweet Farm</title>
+<link rel="icon" type="image/png" sizes="64x64" href="img/icone-64.png">
+<link rel="icon" type="image/png" sizes="192x192" href="img/icone-192.png">
+<link rel="apple-touch-icon" href="img/icone-512.png">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;700&display=swap">
@@ -57,6 +60,13 @@
     background: #0b3f6e; text-align: center; padding: 24px;
   }
   .loading .crate { font-family: var(--display); font-size: 22px; }
+  /* 23/11 : the Gemini poster behind the loading screen, the logo on top, the bar and tips at the bottom. */
+  .loading { background: #f3e2c0 url("img/chargement.jpg") center / cover no-repeat; justify-content: flex-end; padding-bottom: 7%; }
+  .loading .scene { display: none; }
+  .loading .crate, .loading .tip, .loading .pct { color: #5a3a22; text-shadow: 0 1px 0 rgba(255, 248, 235, 0.8); }
+  .loading .bar { background: rgba(90, 58, 34, 0.2); }
+  .loading-logo { position: absolute; top: 4%; left: 50%; transform: translateX(-50%); width: 62%; max-width: 300px; filter: drop-shadow(0 6px 12px rgba(0,0,0,0.25)); }
+  .title-logo { height: 64px; width: auto; display: block; margin: 0 auto; }
   /* 21/11: a little drawn scene (lake, hut, sun), a tomato riding the bar, and rotating tips while the game loads. */
   .scene { width: 72%; max-width: 300px; }
   .scene .sun { animation: sun 4s ease-in-out infinite alternate; transform-origin: 230px 40px; }
@@ -92,13 +102,14 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
 <header>
-  <h1>Home Sweet <span>Farm</span></h1>
+  <h1><img class="title-logo" src="img/logo.png" alt="Home Sweet Farm"></h1>
   <div class="sub">Sweet Lake · Âge 1 · La cabane</div>
 </header>
 
 <div class="stage" id="stage">
   <canvas id="unity-canvas" tabindex="-1"></canvas>
   <div class="loading" id="loading">
+    <img class="loading-logo" src="img/logo.png" alt="">
     <svg class="scene" viewBox="0 0 300 170" aria-hidden="true">
       <circle class="sun" cx="230" cy="40" r="22" fill="#ffd45a"/>
       <path d="M0 110 Q150 80 300 110 L300 170 L0 170 Z" fill="#6bbf59"/>
@@ -123,7 +134,7 @@
 </footer>
 <button id="fs-exit" type="button" aria-label="Quitter le plein écran">✕</button>
 
-<script>var HSF_VERSION = "20261123-1759";</script>
+<script>var HSF_VERSION = "20261123-1821";</script>
 <script>document.write('<script src="Build/Web.loader.js?v=' + HSF_VERSION + '"><\/script>');</script>
 <script>
   (function () {
